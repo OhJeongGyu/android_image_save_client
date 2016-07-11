@@ -1,14 +1,9 @@
-package com.example.ohjeonggyu.imageuploadingtest;
+package com.example.ohjeonggyu.imageuploadingtest.ui;
 
 import android.Manifest;
-import android.app.Dialog;
-import android.app.ProgressDialog;
 import android.content.Intent;
-import android.database.Cursor;
-import android.database.DatabaseUtils;
 import android.graphics.Bitmap;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.v7.app.AppCompatActivity;
@@ -19,11 +14,11 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 
-import com.example.ohjeonggyu.imageuploadingtest.util.ImageHttpClient;
+import com.example.ohjeonggyu.imageuploadingtest.R;
+import com.example.ohjeonggyu.imageuploadingtest.util.HttpHelper;
 import com.loopj.android.http.JsonHttpResponseHandler;
 import com.loopj.android.http.RequestParams;
 
-import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.File;
@@ -31,7 +26,6 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.net.URL;
 
 import cz.msebera.android.httpclient.Header;
 import kr.co.namee.permissiongen.PermissionGen;
@@ -41,9 +35,14 @@ public class MainActivity extends AppCompatActivity {
 
     Button button,uploadButton;
     Bitmap bitmap;
-    String picturePath;
     File file;
     EditText title, content;
+    String user_id;
+
+    void init(){
+        user_id = getIntent().getStringExtra("user_id");
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -57,6 +56,8 @@ public class MainActivity extends AppCompatActivity {
                         Manifest.permission.INTERNET
                 )
                 .request();
+
+        init();
 
 
         button = (Button)findViewById(R.id.imageFromGallery);
@@ -82,7 +83,7 @@ public class MainActivity extends AppCompatActivity {
                     break;
 
                 case R.id.uploadButton :
-                    ImageHttpClient imageHttpClient = new ImageHttpClient();
+                    HttpHelper imageHttpClient = new HttpHelper();
                     file = SaveBitmapToFileCache(bitmap, Environment.getExternalStorageDirectory().getAbsolutePath()+"/temp.jpg");
 
 
@@ -90,6 +91,7 @@ public class MainActivity extends AppCompatActivity {
                     params.setForceMultipartEntityContentType(true);
                     params.put("title",title.getText());
                     params.put("content",content.getText());
+                    params.put("user_id",user_id);
                     try {
                         params.put("image",file);
                     } catch (FileNotFoundException e) {
@@ -132,7 +134,6 @@ public class MainActivity extends AppCompatActivity {
 
             try {
                 bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), uri);
-                // Log.d(TAG, String.valueOf(bitmap));
 
                 ImageView imageView = (ImageView) findViewById(R.id.imageView);
                 imageView.setImageBitmap(bitmap);
@@ -140,51 +141,9 @@ public class MainActivity extends AppCompatActivity {
                 e.printStackTrace();
             }
 
-//            String[] projection = { MediaStore.Images.Media.DATA };
-//
-//            Cursor cursor = getContentResolver().query(uri, projection, null, null, null);
-//            cursor.moveToFirst();
-//
-//            int columnIndex = cursor.getColumnIndex(projection[0]);
-//            picturePath = uri.toString();
-//            picturePath = cursor.getString(columnIndex); // returns null
-//            cursor.close();
-//            Log.i("URI", picturePath);
         }
     }
 
-    private class BitmapToFileAsyncTask extends AsyncTask<Bitmap, Void, File> {
-        ProgressDialog dialog;
-        @Override
-        protected File doInBackground(Bitmap... params) {
-
-            return null;
-        }
-
-        @Override
-        protected void onPreExecute() {
-
-            // 작업을 시작하기 전 할일
-            dialog = new ProgressDialog(getApplicationContext());
-            dialog.setTitle("이미지 변환중");
-            dialog.setMessage("잠시만 기다리세요...");
-            dialog.setIndeterminate(true);
-            dialog.setCancelable(true);
-            dialog.show();
-
-            super.onPreExecute();
-        }
-        @Override
-        protected void onProgressUpdate(Void... voids) {
-            // 파일 다운로드 퍼센티지 표시 작업
-            // setProgressPercent(progress[0]);
-        }
-
-        @Override
-        protected void onCancelled() {
-            super.onCancelled();
-        }
-    }
 
     private File SaveBitmapToFileCache(Bitmap bitmap, String strFilePath) {
 
