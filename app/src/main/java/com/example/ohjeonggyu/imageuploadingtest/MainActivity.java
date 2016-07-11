@@ -9,6 +9,7 @@ import android.database.DatabaseUtils;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -41,7 +42,7 @@ public class MainActivity extends AppCompatActivity {
     Button button,uploadButton;
     Bitmap bitmap;
     String picturePath;
-
+    File file;
     EditText title, content;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -82,9 +83,8 @@ public class MainActivity extends AppCompatActivity {
 
                 case R.id.uploadButton :
                     ImageHttpClient imageHttpClient = new ImageHttpClient();
+                    file = SaveBitmapToFileCache(bitmap, Environment.getExternalStorageDirectory().getAbsolutePath()+"/temp.jpg");
 
-
-                    File file = new File(picturePath);
 
                     RequestParams params = new RequestParams();
                     params.setForceMultipartEntityContentType(true);
@@ -108,6 +108,9 @@ public class MainActivity extends AppCompatActivity {
         public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
             super.onSuccess(statusCode, headers, response);
             Log.i("onSuccess", "hello");
+
+            if (file.exists())
+                file.delete();
         }
 
         @Override
@@ -137,15 +140,16 @@ public class MainActivity extends AppCompatActivity {
                 e.printStackTrace();
             }
 
-            String[] projection = { MediaStore.Images.Media.DATA };
-
-            Cursor cursor = getContentResolver().query(uri, projection, null, null, null);
-            cursor.moveToFirst();
-
-            int columnIndex = cursor.getColumnIndex(projection[0]);
-            picturePath = cursor.getString(columnIndex); // returns null
-            cursor.close();
-            Log.i("URI", picturePath);
+//            String[] projection = { MediaStore.Images.Media.DATA };
+//
+//            Cursor cursor = getContentResolver().query(uri, projection, null, null, null);
+//            cursor.moveToFirst();
+//
+//            int columnIndex = cursor.getColumnIndex(projection[0]);
+//            picturePath = uri.toString();
+//            picturePath = cursor.getString(columnIndex); // returns null
+//            cursor.close();
+//            Log.i("URI", picturePath);
         }
     }
 
@@ -182,5 +186,33 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private File SaveBitmapToFileCache(Bitmap bitmap, String strFilePath) {
 
+        File fileCacheItem = new File(strFilePath);
+        OutputStream out = null;
+
+        try
+        {
+            fileCacheItem.createNewFile();
+            out = new FileOutputStream(fileCacheItem);
+
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, out);
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+        finally
+        {
+            try
+            {
+                out.close();
+            }
+            catch (IOException e)
+            {
+                e.printStackTrace();
+            }
+        }
+        return fileCacheItem;
+    }
 }

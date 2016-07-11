@@ -8,7 +8,7 @@ import com.loopj.android.http.RequestParams;
  * Created by ohjeonggyu on 16. 7. 11..
  */
 public class ImageHttpClient {
-    private static final String BASE_URL = "http://192.168.1.104:3000/";
+    private static final String BASE_URL = "http://192.168.0.7:3001/";
 
     private static AsyncHttpClient client = new AsyncHttpClient();
 
